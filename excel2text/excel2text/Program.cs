@@ -30,13 +30,18 @@ namespace excel2text {
                 Encoding Enc = Encoding.GetEncoding("UTF-8");
 
                 foreach (var sheet in sheets) {
-                    string safe_sheet_name = Regex.Replace(sheet.Name, @"[^\w\.@-]", "", RegexOptions.None);
+
+                    string safe_sheet_name = sheet.Name;
+                    foreach (char c in Path.GetInvalidFileNameChars()) {
+                        safe_sheet_name = safe_sheet_name.Replace(c, '_');
+                    }
 
                     var value_direname = book_output_path + "\\value\\";
                     SafeCreateDirectory(value_direname);
                     using (StreamWriter writer = new StreamWriter(value_direname + safe_sheet_name + ".txt", false, Enc)) {
                         foreach (var item in sheet.CellsUsed()) {
-                            writer.WriteLine(item.Address.ToString() + "\t" + item.Value);
+                            string safe_item_value = Regex.Replace(item.Value.ToString(), @"[\r\n]", "\\n", RegexOptions.None);
+                            writer.WriteLine(item.Address.ToString() + "\t" + safe_item_value);
                         }
                     }
 
