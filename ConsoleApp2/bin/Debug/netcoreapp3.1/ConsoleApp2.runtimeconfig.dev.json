@@ -1,0 +1,8 @@
+{
+  "runtimeOptions": {
+    "additionalProbingPaths": [
+      "C:\\Users\\haruka\\.dotnet\\store\\|arch|\\|tfm|",
+      "C:\\Users\\haruka\\.nuget\\packages"
+    ]
+  }
+}

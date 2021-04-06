@@ -1,0 +1,1 @@
+﻿A1	Font:False-False-None-False-Baseline-False-11-Color Theme: Text1, Tint: 0-游ゴシック-Swiss Fill:None Border:None-FF000000-None-FF000000-None-FF000000-None-FF000000-None-FF000000-False-False NumberFormat: 0- Alignment: General-Bottom-0-False-ContextDependent-0-False-0-False- Protection: Locked
