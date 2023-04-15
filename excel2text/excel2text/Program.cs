@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 
 using OfficeOpenXml;
 using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace excel2text {
     class Program {
@@ -23,65 +24,145 @@ namespace excel2text {
 
                 SafeCreateDirectory(book_output_path);
                 OutputNames(workbook_path, book_output_path);
+                try {
+                    ClosedXmlOut(book_output_path, workbook_path);
+                } catch {
+                    EEplusOut(book_output_path, workbook_path);
+                }
 
-                XLWorkbook workbook = new XLWorkbook(workbook_path);
-                IXLWorksheets sheets = workbook.Worksheets;
+            }
+        }
+        public static void EEplusOut(string book_output_path, string workbook_path) {
 
-                Encoding Enc = Encoding.GetEncoding("UTF-8");
+            FileInfo fileInfo = new FileInfo(workbook_path);
+            ExcelPackage excl = new ExcelPackage(fileInfo);
 
-                foreach (var sheet in sheets) {
+            ExcelWorksheets sheets = excl.Workbook.Worksheets;
 
-                    string safe_sheet_name = sheet.Name;
-                    foreach (char c in Path.GetInvalidFileNameChars()) {
-                        safe_sheet_name = safe_sheet_name.Replace(c, '_');
-                    }
+            Encoding Enc = Encoding.GetEncoding("UTF-8");
 
-                    var value_direname = book_output_path + "\\value\\";
-                    SafeCreateDirectory(value_direname);
-                    using (StreamWriter writer = new StreamWriter(value_direname + safe_sheet_name + ".txt", false, Enc)) {
-                        foreach (var item in sheet.CellsUsed()) {
-                            string safe_item_value = Regex.Replace(item.Value.ToString(), @"[\r\n]", "\\n", RegexOptions.None);
+            foreach (var sheet in sheets) {
+
+                string safe_sheet_name = sheet.Name;
+                foreach (char c in Path.GetInvalidFileNameChars()) {
+                    safe_sheet_name = safe_sheet_name.Replace(c, '_');
+                }
+
+                var value_direname = book_output_path + "\\value\\";
+                SafeCreateDirectory(value_direname);
+                using (StreamWriter writer = new StreamWriter(value_direname + safe_sheet_name + ".txt", false, Enc)) {
+                    foreach (var item in sheet.Cells) {
+                        string safe_item_value = "";
+                        if ((item.Value != null) && (item.Value.ToString() != "")) {
+                            safe_item_value = Regex.Replace(item.Value.ToString(), @"[\r\n]", "\\n", RegexOptions.None);
                             writer.WriteLine(item.Address.ToString() + "\t" + safe_item_value);
                         }
                     }
+                }
 
-                    var style_dirname = book_output_path + "\\style\\";
-                    SafeCreateDirectory(style_dirname);
-                    using (StreamWriter writer = new StreamWriter(style_dirname + safe_sheet_name + ".txt", false, Enc)) {
-                        foreach (var item in sheet.CellsUsed()) {
-                            writer.WriteLine(item.Address.ToString() + "\t" + item.Style);
+                var style_dirname = book_output_path + "\\style\\";
+                SafeCreateDirectory(style_dirname);
+                using (StreamWriter writer = new StreamWriter(style_dirname + safe_sheet_name + ".txt", false, Enc)) {
+                    foreach (var item in sheet.Cells) {
+                        if ((item.StyleName != null) && (item.StyleName.ToString() != "")) {
+                            writer.WriteLine(item.Address.ToString() + "\t" + item.StyleName + " " + item.Style.GetHashCode());
                         }
                     }
+                }
 
-                    var FormulaA1_dirname = book_output_path + "\\A1\\";
-                    SafeCreateDirectory(FormulaA1_dirname);
-                    using (StreamWriter writer = new StreamWriter(FormulaA1_dirname + safe_sheet_name + ".txt", false, Enc)) {
-                        foreach (var item in sheet.CellsUsed()) {
-                            writer.WriteLine(item.Address.ToString() + "\t" + item.FormulaA1);
+                var FormulaA1_dirname = book_output_path + "\\A1\\";
+                SafeCreateDirectory(FormulaA1_dirname);
+                using (StreamWriter writer = new StreamWriter(FormulaA1_dirname + safe_sheet_name + ".txt", false, Enc)) {
+                    foreach (var item in sheet.Cells) {
+                        if ((item.Formula != null) && (item.Formula.ToString() != "")) {
+                            writer.WriteLine(item.Address.ToString() + "\t" + item.Formula);
                         }
                     }
+                }
 
-                    var FormulaR1C1_dirname = book_output_path + "\\R1C1\\";
-                    SafeCreateDirectory(FormulaR1C1_dirname);
-                    using (StreamWriter writer = new StreamWriter(FormulaR1C1_dirname + safe_sheet_name + ".txt", false, Enc)) {
-                        foreach (var item in sheet.CellsUsed()) {
+                var FormulaR1C1_dirname = book_output_path + "\\R1C1\\";
+                SafeCreateDirectory(FormulaR1C1_dirname);
+                using (StreamWriter writer = new StreamWriter(FormulaR1C1_dirname + safe_sheet_name + ".txt", false, Enc)) {
+                    foreach (var item in sheet.Cells) {
+                        if ((item.FormulaR1C1 != null) && (item.FormulaR1C1.ToString() != "")) {
                             writer.WriteLine(item.Address.ToString() + "\t" + item.FormulaR1C1);
                         }
                     }
+                }
 
-                    var item_filename = book_output_path + "\\item\\";
-                    SafeCreateDirectory(item_filename);
-                    using (StreamWriter writer = new StreamWriter(item_filename + safe_sheet_name + ".txt", false, Enc)) {
-                        foreach (var item in sheet.CellsUsed()) {
+                var item_filename = book_output_path + "\\item\\";
+                SafeCreateDirectory(item_filename);
+                using (StreamWriter writer = new StreamWriter(item_filename + safe_sheet_name + ".txt", false, Enc)) {
+                    foreach (var item in sheet.Cells) {
+                        if ((item != null) && (item.ToString() != "")) {
                             writer.WriteLine(item.Address.ToString() + "\t" + item);
                         }
                     }
                 }
             }
-            //} catch (Exception e) {
-            //    Console.WriteLine("{0} Exception caught.", e);
-            //}
         }
+        public static void ClosedXmlOut(string book_output_path, string workbook_path) {
+
+            XLWorkbook workbook = new XLWorkbook(workbook_path);
+            IXLWorksheets sheets = workbook.Worksheets;
+
+            Encoding Enc = Encoding.GetEncoding("UTF-8");
+
+            foreach (var sheet in sheets) {
+
+                string safe_sheet_name = sheet.Name;
+                foreach (char c in Path.GetInvalidFileNameChars()) {
+                    safe_sheet_name = safe_sheet_name.Replace(c, '_');
+                }
+
+                var value_direname = book_output_path + "\\value\\";
+                SafeCreateDirectory(value_direname);
+                using (StreamWriter writer = new StreamWriter(value_direname + safe_sheet_name + ".txt", false, Enc)) {
+                    foreach (var item in sheet.CellsUsed()) {
+                        string safe_item_value = "";
+                        try {
+                            safe_item_value = Regex.Replace(item.Value.ToString(), @"[\r\n]", "\\n", RegexOptions.None);
+                        } catch {
+                            continue;
+                        }
+                        writer.WriteLine(item.Address.ToString() + "\t" + safe_item_value);
+                    }
+                }
+
+                var style_dirname = book_output_path + "\\style\\";
+                SafeCreateDirectory(style_dirname);
+                using (StreamWriter writer = new StreamWriter(style_dirname + safe_sheet_name + ".txt", false, Enc)) {
+                    foreach (var item in sheet.CellsUsed()) {
+                        writer.WriteLine(item.Address.ToString() + "\t" + item.Style);
+                    }
+                }
+
+                var FormulaA1_dirname = book_output_path + "\\A1\\";
+                SafeCreateDirectory(FormulaA1_dirname);
+                using (StreamWriter writer = new StreamWriter(FormulaA1_dirname + safe_sheet_name + ".txt", false, Enc)) {
+                    foreach (var item in sheet.CellsUsed()) {
+                        writer.WriteLine(item.Address.ToString() + "\t" + item.FormulaA1);
+                    }
+                }
+
+                var FormulaR1C1_dirname = book_output_path + "\\R1C1\\";
+                SafeCreateDirectory(FormulaR1C1_dirname);
+                using (StreamWriter writer = new StreamWriter(FormulaR1C1_dirname + safe_sheet_name + ".txt", false, Enc)) {
+                    foreach (var item in sheet.CellsUsed()) {
+                        writer.WriteLine(item.Address.ToString() + "\t" + item.FormulaR1C1);
+                    }
+                }
+
+                var item_filename = book_output_path + "\\item\\";
+                SafeCreateDirectory(item_filename);
+                using (StreamWriter writer = new StreamWriter(item_filename + safe_sheet_name + ".txt", false, Enc)) {
+                    foreach (var item in sheet.CellsUsed()) {
+                        writer.WriteLine(item.Address.ToString() + "\t" + item);
+                    }
+                }
+            }
+        }
+
 
         public static void OutputNames(string input_book_path, string output_path) {
             FileInfo workbook_info = new FileInfo(input_book_path);
@@ -94,7 +175,11 @@ namespace excel2text {
 
             using (StreamWriter writer = new StreamWriter(output_path + @"\" + file_name + "_names.txt", false, Enc)) {
                 foreach (var item in workbook.Names) {
-                    writer.WriteLine(item.Name + "\t" + item.Address);
+                    Dictionary<string, string> a = new Dictionary<string, string>() { { "FullAddress", "" }, { "Name", "" }, { "A1", "" }, { "R1C1", "" } };
+                    a["FullAddress"] = item.FullAddressAbsolute;
+                    a["Name"] = item.Name;
+                    a["A1"] = item.Formula;
+                    writer.WriteLine(a["FullAddress"] + "\t" + a["Name"] + "\t" + a["A1"] + "\t" + a["R1C1"]);
                 }
             }
             return;
